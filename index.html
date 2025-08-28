@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EXTREME HACKING TERMINAL</title>
+<style>
+html, body { margin:0; padding:0; width:100%; height:100%; background:black; overflow:hidden; font-family:'Courier New', monospace; }
+body { color:#0f0; }
+
+body::before {
+  content:""; position:absolute; top:0; left:0; width:100%; height:100%;
+  background: repeating-linear-gradient(transparent, transparent 1px, rgba(0,255,0,0.05) 2px);
+  pointer-events:none; z-index:5;
+}
+
+#terminal { position:relative; width:100%; height:100%; padding:20px; box-sizing:border-box; overflow:hidden; }
+
+#header { height:30px; display:flex; align-items:center; gap:8px; margin-bottom:10px; z-index:10; position:relative; }
+.dot { width:12px; height:12px; border-radius:50%; }
+.red { background:#ff5f56; }
+.yellow { background:#ffbd2e; }
+.green { background:#27c93f; }
+
+#screen { position:relative; flex:1; color:#0f0; text-shadow:0 0 5px #0f0,0 0 10px #0f0; white-space:pre-wrap; overflow:hidden; z-index:10; }
+.redText { color:#f00; text-shadow:0 0 5px #f00,0 0 10px #f00; }
+.caret { display:inline-block; width:10px; background:#0f0; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { background:black; } }
+
+#footer { position:absolute; bottom:10px; left:20px; font-size:14px; color:#0f0; z-index:10; }
+
+canvas { position:absolute; top:0; left:0; width:100%; height:100%; z-index:0; }
+
+.glitch {
+  position:relative;
+  color:#f00;
+  text-shadow:
+    2px 0 #0f0, -2px 0 #0f0,
+    0 2px #0f0, 0 -2px #0f0;
+  animation: glitchAnim 0.2s infinite;
+}
+@keyframes glitchAnim {
+  0% { clip: rect(0,9999px,0,0); transform: translate(0);}
+  20% { clip: rect(0,9999px,5px,0); transform: translate(-2px,2px);}
+  40% { clip: rect(5px,9999px,10px,0); transform: translate(2px,-2px);}
+  60% { clip: rect(10px,9999px,15px,0); transform: translate(-2px,1px);}
+  80% { clip: rect(15px,9999px,20px,0); transform: translate(2px,0);}
+  100% { clip: rect(0,9999px,0,0); transform: translate(0);}
+}
+</style>
+</head>
+<body>
+<canvas id="matrix"></canvas>
+<div id="terminal">
+  <div id="header">
+    <div class="dot red"></div>
+    <div class="dot yellow"></div>
+    <div class="dot green"></div>
+  </div>
+  <div id="screen"></div>
+  <div id="footer">Press Enter to replay</div>
+</div>
+
+<script>
+const canvas = document.getElementById('matrix');
+const ctx = canvas.getContext('2d');
+let width = canvas.width = window.innerWidth;
+let height = canvas.height = window.innerHeight;
+const cols = Math.floor(width / 20);
+const yPos = Array(cols).fill(0);
+const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+-=[]{}|;:,.<>/?";
+const redChars = "!@#$%^&*()_+-=[]{}|;:,.<>/?";
+
+function matrixEffect() {
+  ctx.fillStyle = 'rgba(0,0,0,0.07)';
+  ctx.fillRect(0,0,width,height);
+  ctx.font = '20px monospace';
+  for(let i=0;i<cols;i++){
+    const text = Math.random() > 0.95 ? redChars[Math.floor(Math.random()*redChars.length)] : chars[Math.floor(Math.random()*chars.length)];
+    ctx.fillStyle = (Math.random() > 0.92) ? '#f00' : '#0f0';
+    ctx.fillText(text, i*20, yPos[i]*20);
+    if(yPos[i]*20>height && Math.random()>0.975) yPos[i]=0;
+    yPos[i]++;
+  }
+}
+let matrixInterval = setInterval(matrixEffect, 50);
+
+/* Terminal messages */
+const screen = document.getElementById('screen');
+const messages = [
+  "Initializing EXTREME HACKING TERMINAL...\n",
+  ">> Accessing target device...\n",
+  ">> Camera activated.\n",
+  ">> Microphone listening.\n",
+  ">> Exfiltrating SMS and contacts...\n",
+  ">> Tracking location...\n",
+  ">> SIM cloning in progress...\n",
+  ">> Monitoring installed apps...\n",
+  ">> Banking and payments accessed.\n",
+  "!! CRITICAL ALERT: FIREWALL BREACH DETECTED !!\n",
+  "!! SYSTEM COMPROMISED !!\n",
+  ">> Operation complete.\n"
+];
+let index=0,charIndex=0;
+
+function playSiren(){
+  const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+  const o1 = audioCtx.createOscillator();
+  const o2 = audioCtx.createOscillator();
+  const g = audioCtx.createGain();
+  o1.type='square'; o2.type='triangle';
+  o1.frequency.setValueAtTime(800,audioCtx.currentTime);
+  o2.frequency.setValueAtTime(1200,audioCtx.currentTime);
+  o1.connect(g); o2.connect(g); g.connect(audioCtx.destination);
+  g.gain.setValueAtTime(0.2,audioCtx.currentTime);
+  o1.start(); o2.start();
+  setTimeout(()=>{ o1.stop(); o2.stop(); },500);
+}
+
+function corruptText(text){
+  return text.split('').map(c=>Math.random()>0.9?chars[Math.floor(Math.random()*chars.length)]:c).join('');
+}
+
+function typeMessage(){
+  if(index>=messages.length) return;
+  let msg = messages[index];
+  let isCritical = msg.includes("!!");
+  let span = document.createElement('span');
+  if(isCritical){ span.classList.add('glitch'); playSiren(); screenShake(); mobileVibrate(); msg=corruptText(msg); }
+  screen.appendChild(span);
+
+  function typeChar(){
+    if(charIndex<msg.length){
+      span.textContent += msg[charIndex];
+      charIndex++;
+      if(Math.random()>0.995 && isCritical){ span.textContent = corruptText(span.textContent); } 
+      requestAnimationFrame(typeChar);
+    } else {
+      screen.appendChild(document.createElement('br'));
+      charIndex=0; index++;
+      setTimeout(typeMessage,300);
+    }
+  }
+  typeChar();
+}
+
+function screenShake(){
+  let i=0;
+  const shake = setInterval(()=>{
+    const x=(Math.random()*12-6), y=(Math.random()*12-6);
+    screen.style.transform=`translate(${x}px,${y}px)`;
+    i++;
+    if(i>12){ clearInterval(shake); screen.style.transform=''; }
+  },40);
+}
+
+function mobileVibrate(){ if(navigator.vibrate) navigator.vibrate([100,50,100]); }
+
+typeMessage();
+
+window.addEventListener('keydown', e=>{
+  if(e.key==='Enter'){ index=0; charIndex=0; screen.innerHTML=''; typeMessage(); }
+});
+
+window.addEventListener('resize', ()=>{
+  width = canvas.width = window.innerWidth;
+  height = canvas.height = window.innerHeight;
+});
+</script>
+</body>
+</html>
